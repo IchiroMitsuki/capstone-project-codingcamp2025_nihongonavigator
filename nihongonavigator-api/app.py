@@ -1,4 +1,5 @@
 import re
+import os
 import string
 import nltk
 import pickle
@@ -10,6 +11,9 @@ nltk.download('punkt_tab')
 nltk.download('stopwords')
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -18,16 +22,21 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 # ---- Konfigurasi awal ----
 app = Flask(__name__)
 MAX_LEN = 200  # Sama seperti saat training
+CORS(app)  # Ini yang bikin semua domain bisa akses API kamu
+
+@app.route('/')
+def home():
+    return "Hello from Flask! API is working"
 
 # Load model
 model = load_model('best_model_lstm.h5')
 
 # Load tokenizer
-with open('tokenizer.pickle', 'rb') as handle:
+with open('tokenizer_lstm.pkl', 'rb') as handle:
     tokenizer = pickle.load(handle)
 
 # Load label encoder
-with open('label_encoder.pickle', 'rb') as handle:
+with open('label_encoder.pkl', 'rb') as handle:
     label_encoder = pickle.load(handle)
 
 
@@ -203,4 +212,5 @@ def predict():
 
 # ---- Jalankan ----
 if __name__ == '__main__':
-    app.run(debug=False)#matikan sebelum deploy server
+    port = int(os.environ.get("PORT", 5000))  # Ambil dari env, default 5000
+    app.run(host='0.0.0.0', port=port, debug=False)
